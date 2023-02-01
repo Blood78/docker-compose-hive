@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   thehive:
-    image: strangebee/thehive:latest
+    image: 'thehiveproject/thehive4:latest'
     restart: unless-stopped
     depends_on:
       - cassandra
