@@ -45,7 +45,6 @@ services:
     environment:
       - job_directory=/opt/cortex/jobs
     command:
-      - "elasticsearch"
       - "--es-uri"
       - "https://192.168.1.15:9200"
     volumes:
