@@ -28,6 +28,8 @@ services:
 
   cassandra:
     image: 'cassandra:4'
+    container_name: cassandra
+    hostname: cassandra
     restart: unless-stopped
     mem_limit: 1500m
     ports:
