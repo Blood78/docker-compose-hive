@@ -1,0 +1,124 @@
+version: "3.8"
+services:
+  thehive:
+    image: strangebee/thehive:latest
+    restart: unless-stopped
+    depends_on:
+      - cassandra
+      - cortex
+    mem_limit: 4000m
+    ports:
+      - "0.0.0.0:9000:9000"
+    environment:
+      - JVM_OPTS="-Xms1024M -Xmx1024M"
+    command:
+      - --secret
+      - "FKQMufqLPpzijOyPkyQkR0OHVfCOabu9"
+      - "--cql-hostnames"
+      - "cassandra"
+      - "--index-backend"
+      - "elasticsearch"
+      - "--es-uri"
+      - "https://192.168.1.15:9200"
+      - "--no-config-cortex"
+    volumes:
+      - thehivedata:/etc/thehive/application.conf
+    networks:
+      - SOC_NET
+
+  cassandra:
+    image: 'cassandra:4'
+    restart: unless-stopped
+    mem_limit: 1500m
+    ports:
+      - "0.0.0.0:9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TheHive
+    volumes:
+      - cassandradata:/var/lib/cassandra
+    networks:
+      - SOC_NET
+      
+  cortex:
+    image: thehiveproject/cortex:latest
+    restart: unless-stopped
+    environment:
+      - job_directory=/opt/cortex/jobs
+    command:
+      - "elasticsearch"
+      - "--es-uri"
+      - "https://192.168.1.15:9200"
+    volumes:
+      - cortexdata:/var/run/docker.sock
+      - cortexdata:/opt/cortex/jobs
+      - cortexdata:/var/log/cortex
+      - cortexdata:/cortex/application.conf
+    ports:
+      - "0.0.0.0:9001:9001"
+    networks:
+      - SOC_NET
+
+  misp:
+    image: coolacid/misp-docker:core-latest
+    restart: unless-stopped
+    depends_on: 
+      - misp_mysql
+    ports:
+      - "0.0.0.0:82:82"
+      - "0.0.0.0:445:445"
+    volumes:
+      - "./server-configs/:/var/www/MISP/app/Config/"
+      - "./logs/:/var/www/MISP/app/tmp/logs/"
+      - "./files/:/var/www/MISP/app/files"
+      - "./ssl/:/etc/nginx/certs"
+    environment:
+      - MYSQL_HOST=misp_mysql
+      - MYSQL_DATABASE=mispdb
+      - MYSQL_USER=mispuser
+      - MYSQL_PASSWORD=misppass
+      - MISP_ADMIN_EMAIL=mispadmin@lab.local
+      - MISP_ADMIN_PASSPHRASE=mispadminpass
+      - MISP_BASEURL=localhost
+      - TIMEZONE=Europe/London
+      - "INIT=true"         
+      - "CRON_USER_ID=1"   
+      - "REDIS_FQDN=redis"
+      - "HOSTNAME=https://192.168.1.253"
+    networks:
+      - SOC_NET
+
+  misp_mysql:
+    image: mysql/mysql-server:5.7
+    restart: unless-stopped
+    volumes:
+      - mispsqldata:/var/lib/mysql   
+    environment:
+      - MYSQL_DATABASE=mispdb
+      - MYSQL_USER=mispuser
+      - MYSQL_PASSWORD=misppass
+      - MYSQL_ROOT_PASSWORD=mispass
+    networks:
+      - SOC_NET
+  redis:
+    image: redis:5.0.6
+    networks:
+      - SOC_NET
+  misp-modules:
+    image: coolacid/misp-docker:modules-latest
+    environment:
+      - "REDIS_BACKEND=redis"
+    depends_on:
+      - redis
+      - misp_mysql
+    networks:
+      - SOC_NET   
+
+volumes:
+  cassandradata:
+  cortexdata:
+  thehivedata:
+  mispsqldata:
+
+networks:
+    SOC_NET:
+          driver: bridge
