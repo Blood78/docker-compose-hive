@@ -12,14 +12,9 @@ services:
     environment:
       - JVM_OPTS="-Xms1024M -Xmx1024M"
     command:
-      - --secret
-      - "FKQMufqLPpzijOyPkyQkR0OHVfCOabu9"
+      - --no-config
       - "--cql-hostnames"
       - "cassandra"
-      - "--index-backend"
-      - "elasticsearch"
-      - "--es-hostnames"
-      - "elasticsearch"
       - "--no-config-cortex"
     volumes:
       - thehivedata:/etc/thehive/application.conf
