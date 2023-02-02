@@ -6,7 +6,6 @@ services:
     depends_on:
       - cassandra
       - cortex
-    mem_limit: 4000m
     ports:
       - "0.0.0.0:9000:9000"
     environment:
@@ -26,7 +25,6 @@ services:
     container_name: cassandra
     hostname: cassandra
     restart: unless-stopped
-    mem_limit: 1500m
     ports:
       - "0.0.0.0:9042:9042"
     environment:
